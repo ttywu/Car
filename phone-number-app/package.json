@@ -1,0 +1,17 @@
+{
+  "name": "phone-number-app",
+  "version": "1.0.0",
+  "description": "Get a real phone number without a SIM chip, using Twilio. Text, receive codes, and get voicemail in your browser.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "twilio": "^5.3.7"
+  }
+}

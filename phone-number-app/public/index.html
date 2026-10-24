@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Phone</title>
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --text:#1c1e21; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb; --in:#eef2ff; --out:#dcfce7; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111317; --card:#1b1e24; --text:#e8eaed; --muted:#9aa0a6; --line:#2c3038; --accent:#60a5fa; --in:#1e2640; --out:#14301f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px; font-size:22px; font-weight:700; }
+  nav { display:flex; gap:4px; padding:0 16px; }
+  nav button { flex:1; padding:10px; border:0; border-radius:10px 10px 0 0; background:transparent; color:var(--muted); font-size:15px; cursor:pointer; }
+  nav button.on { background:var(--card); color:var(--text); font-weight:600; }
+  main { margin:0 16px 16px; background:var(--card); border-radius:0 0 12px 12px; padding:16px; max-width:700px; }
+  section { display:none; } section.on { display:block; }
+  input, select, textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; }
+  textarea { min-height:80px; }
+  label { display:block; margin:10px 0 4px; color:var(--muted); font-size:14px; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  button.go { margin-top:12px; padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button.small { padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:transparent; color:var(--text); cursor:pointer; }
+  .item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .muted { color:var(--muted); font-size:14px; }
+  .msg { padding:10px; border-radius:10px; margin:8px 0; }
+  .msg.in { background:var(--in); } .msg.out { background:var(--out); }
+  .note { padding:10px; border-radius:8px; background:var(--in); margin-bottom:12px; font-size:14px; }
+  #toast { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); background:#111; color:#fff; padding:10px 16px; border-radius:8px; display:none; }
+  audio { width:100%; margin-top:6px; }
+</style>
+</head>
+<body>
+<header>📱 My Phone</header>
+<nav>
+  <button data-tab="inbox" class="on">Inbox</button>
+  <button data-tab="send">Send</button>
+  <button data-tab="numbers">My Numbers</button>
+  <button data-tab="get">Get Number</button>
+</nav>
+<main>
+  <section id="inbox" class="on">
+    <div class="row"><button class="small" onclick="loadInbox()" style="flex:0">↻ Refresh</button></div>
+    <h3>Texts</h3><div id="texts" class="muted">Loading…</div>
+    <h3>Voicemail</h3><div id="vms" class="muted">Loading…</div>
+  </section>
+
+  <section id="send">
+    <label>From (your number)</label><select id="sendFrom"></select>
+    <label>To (with country code, e.g. +15551234567)</label><input id="sendTo" placeholder="+1…">
+    <label>Message</label><textarea id="sendBody"></textarea>
+    <button class="go" onclick="sendText()">Send text</button>
+  </section>
+
+  <section id="numbers">
+    <div id="linkNote"></div>
+    <div id="myNumbers" class="muted">Loading…</div>
+  </section>
+
+  <section id="get">
+    <div class="row">
+      <div><label>Country</label>
+        <select id="country">
+          <option value="US">United States</option><option value="CA">Canada</option>
+          <option value="GB">United Kingdom</option><option value="AU">Australia</option>
+          <option value="DE">Germany</option><option value="FR">France</option>
+          <option value="IL">Israel</option><option value="NL">Netherlands</option>
+        </select></div>
+      <div><label>Area code (optional)</label><input id="areaCode" inputmode="numeric" placeholder="e.g. 212"></div>
+    </div>
+    <button class="go" onclick="search()">Find numbers</button>
+    <p class="muted">Each number costs about $1–2 a month on your Twilio account. Some countries need extra paperwork in Twilio first.</p>
+    <div id="results"></div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const when = (d) => new Date(d).toLocaleString();
+
+function toast(text) {
+  const t = $('toast'); t.textContent = text; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = 'none'), 3500);
+}
+async function api(url, opts = {}) {
+  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+}
+
+document.querySelectorAll('nav button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('nav button, section').forEach((el) => el.classList.remove('on'));
+  b.classList.add('on'); $(b.dataset.tab).classList.add('on');
+  if (b.dataset.tab === 'inbox') loadInbox();
+  if (b.dataset.tab === 'numbers' || b.dataset.tab === 'send') loadNumbers();
+});
+
+async function loadInbox() {
+  try {
+    const { messages, voicemails } = await api('/api/inbox');
+    $('texts').innerHTML = messages.length ? messages.map((m) => `
+      <div class="msg ${m.direction}">
+        <div class="muted">${m.direction === 'in' ? 'From ' + esc(m.from) + ' → ' + esc(m.to) : 'You → ' + esc(m.to)} · ${when(m.date)}</div>
+        <div>${esc(m.body)}</div>
+        ${m.direction === 'in' ? `<button class="small" onclick="replyTo('${esc(m.from)}','${esc(m.to)}')">Reply</button>` : ''}
+      </div>`).join('') : 'No texts yet.';
+    $('vms').innerHTML = voicemails.length ? voicemails.map((v) => `
+      <div class="msg in">
+        <div class="muted">From ${esc(v.from || 'unknown')} · ${v.seconds}s · ${when(v.date)}</div>
+        <audio controls preload="none" src="/api/voicemail/${encodeURIComponent(v.id)}.mp3"></audio>
+      </div>`).join('') : 'No voicemail yet.';
+  } catch (e) { toast(e.message); }
+}
+
+function replyTo(to, from) {
+  document.querySelector('nav button[data-tab="send"]').click();
+  $('sendTo').value = to;
+  setTimeout(() => { $('sendFrom').value = from; }, 400);
+}
+
+async function loadNumbers() {
+  try {
+    const { numbers, publicUrl } = await api('/api/numbers');
+    $('sendFrom').innerHTML = numbers.map((n) => `<option value="${esc(n.number)}">${esc(n.nice)}</option>`).join('')
+      || '<option value="">Get a number first</option>';
+    $('linkNote').innerHTML = publicUrl ? '' :
+      '<div class="note">⚠️ PUBLIC_URL is not set, so incoming texts and calls can\'t reach this app yet. See the README.</div>';
+    $('myNumbers').innerHTML = numbers.length ? numbers.map((n) => `
+      <div class="item">
+        <div><b>${esc(n.nice)}</b><div class="muted">${n.linked ? '✅ Texts & voicemail come here' : '⚠️ Not linked to this app'}</div></div>
+        <div>
+          ${!n.linked && publicUrl ? `<button class="small" onclick="link('${n.sid}')">Link</button>` : ''}
+          <button class="small" onclick="release('${n.sid}','${esc(n.nice)}')">Remove</button>
+        </div>
+      </div>`).join('') : 'You don\'t have a number yet. Go to "Get Number".';
+  } catch (e) { toast(e.message); }
+}
+
+async function link(sid) {
+  try { await api(`/api/numbers/${sid}/link`, { method: 'POST' }); toast('Linked!'); loadNumbers(); }
+  catch (e) { toast(e.message); }
+}
+async function release(sid, nice) {
+  if (!confirm(`Give back ${nice}? You will lose this number forever.`)) return;
+  try { await api(`/api/numbers/${sid}`, { method: 'DELETE' }); toast('Number removed'); loadNumbers(); }
+  catch (e) { toast(e.message); }
+}
+
+async function search() {
+  $('results').innerHTML = '<p class="muted">Searching…</p>';
+  try {
+    const q = new URLSearchParams({ country: $('country').value, areaCode: $('areaCode').value.trim() });
+    const list = await api('/api/available?' + q);
+    $('results').innerHTML = list.length ? list.map((n) => `
+      <div class="item">
+        <div><b>${esc(n.nice)}</b><div class="muted">${esc(n.place)}</div></div>
+        <button class="small" onclick="buy('${esc(n.number)}')">Get this one</button>
+      </div>`).join('') : '<p class="muted">No numbers found. Try another area code.</p>';
+  } catch (e) { $('results').innerHTML = ''; toast(e.message); }
+}
+
+async function buy(number) {
+  if (!confirm(`Get ${number}? Your Twilio account will be charged monthly.`)) return;
+  try {
+    const r = await api('/api/buy', { method: 'POST', body: JSON.stringify({ number }) });
+    toast(`🎉 ${r.number} is yours!`);
+    document.querySelector('nav button[data-tab="numbers"]').click();
+  } catch (e) { toast(e.message); }
+}
+
+async function sendText() {
+  const body = { from: $('sendFrom').value, to: $('sendTo').value.trim(), body: $('sendBody').value };
+  if (!body.from || !body.to || !body.body) return toast('Fill in all the boxes');
+  try { await api('/api/send', { method: 'POST', body: JSON.stringify(body) }); $('sendBody').value = ''; toast('Sent!'); }
+  catch (e) { toast(e.message); }
+}
+
+loadInbox();
+setInterval(() => { if ($('inbox').classList.contains('on')) loadInbox(); }, 15000);
+</script>
+</body>
+</html>
