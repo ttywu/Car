@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Scout Search</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: a centered home screen that collapses into a left-aligned results column under a sticky search bar */
+:root {
+  --bg: #ffffff;
+  --surface: #f3f5f8;
+  --fg: #1d2330;
+  --muted: #5d6677;
+  --line: #dde2ea;
+  --link: #1a4fd6;
+  --visited: #6a3db8;
+  --url: #2c6e3f;
+  --c1: #1a4fd6; --c2: #e0452b; --c3: #f2a900; --c4: #1f9a5a;
+  --shadow: 0 2px 10px rgba(29, 35, 48, .12);
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15181e; --surface: #20242c; --fg: #e6e9ef; --muted: #9aa3b2; --line: #333a46;
+    --link: #8fb0ff; --visited: #c3a6f5; --url: #79c992;
+    --c1: #7aa2ff; --c2: #ff7a5f; --c3: #ffcb45; --c4: #4fd08c;
+    --shadow: 0 2px 12px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15181e; --surface: #20242c; --fg: #e6e9ef; --muted: #9aa3b2; --line: #333a46;
+  --link: #8fb0ff; --visited: #c3a6f5; --url: #79c992;
+  --c1: #7aa2ff; --c2: #ff7a5f; --c3: #ffcb45; --c4: #4fd08c;
+  --shadow: 0 2px 12px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--link); }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+
+.logo { font-family: var(--display); font-weight: 800; letter-spacing: -.02em; line-height: 1; user-select: none; text-decoration: none; }
+.logo span:nth-child(1) { color: var(--c1); }
+.logo span:nth-child(2) { color: var(--c2); }
+.logo span:nth-child(3) { color: var(--c3); }
+.logo span:nth-child(4) { color: var(--c1); }
+.logo span:nth-child(5) { color: var(--c4); }
+
+/* Search box */
+.box { position: relative; width: 100%; }
+.field {
+  display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 8px 0 16px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 24px;
+}
+.field:hover, .box.open .field, .field:focus-within { box-shadow: var(--shadow); border-color: transparent; }
+.box.open .field { border-radius: 24px 24px 0 0; }
+.field svg { flex: none; width: 20px; height: 20px; fill: var(--muted); }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; height: 100%; }
+.clear { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 22px; width: 36px; height: 36px; border-radius: 50%; line-height: 1; }
+.clear:hover { background: var(--surface); }
+.suggest {
+  position: absolute; left: 0; right: 0; top: 48px; z-index: 20; background: var(--bg);
+  border-radius: 0 0 24px 24px; box-shadow: var(--shadow); padding: 4px 0 14px; list-style: none; margin: 0;
+}
+.suggest::before { content: ""; display: block; height: 1px; background: var(--line); margin: 0 16px 6px; }
+.suggest li { display: flex; align-items: center; gap: 12px; padding: 6px 16px; cursor: pointer; }
+.suggest li svg { width: 16px; height: 16px; fill: var(--muted); flex: none; }
+.suggest li.active, .suggest li:hover { background: var(--surface); }
+.suggest b { font-weight: 600; }
+
+/* Home */
+#home { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding-block: 40px 80px; }
+#home .logo { font-size: clamp(64px, 14vw, 96px); }
+#home .box { max-width: 584px; }
+.buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn { background: var(--surface); border: 1px solid var(--surface); border-radius: 6px; padding: 9px 16px; font-size: 14px; cursor: pointer; }
+.btn:hover { border-color: var(--line); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+.trending { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 584px; align-items: center; }
+.trending .label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; margin-right: 4px; }
+.chip { border: 1px solid var(--line); background: none; border-radius: 16px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.chip:hover { background: var(--surface); }
+
+/* Results */
+#results { flex: 1; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; background: var(--bg);
+  display: flex; align-items: center; gap: 24px; padding-block: 20px 0; flex-wrap: wrap;
+}
+.topbar .logo { font-size: 30px; cursor: pointer; }
+.topbar .box { max-width: 690px; flex: 1 1 320px; }
+.tabs { display: flex; gap: 22px; width: 100%; padding-left: 138px; border-bottom: 1px solid var(--line); }
+.tab { border: 0; background: none; padding: 12px 2px 10px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; }
+.tab.on { color: var(--c1); border-bottom-color: var(--c1); font-weight: 600; }
+main { padding-left: 138px; max-width: 830px; padding-block: 16px 40px; display: flex; flex-direction: column; gap: 28px; }
+.stats { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.notice { background: var(--surface); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--muted); }
+.result { min-width: 0; max-width: 652px; }
+.site { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; text-decoration: none; color: var(--fg); }
+.fav {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line);
+  display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 13px; flex: none;
+}
+.site .name { font-size: 14px; line-height: 1.3; }
+.site .url { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.result h3 { margin: 0 0 4px; font-size: 20px; font-weight: 500; line-height: 1.3; }
+.result h3 a { text-decoration: none; }
+.result h3 a:hover { text-decoration: underline; }
+.result h3 a:visited { color: var(--visited); }
+.snippet { color: var(--muted); font-size: 14px; margin: 0; overflow-wrap: anywhere; }
+.snippet b { color: var(--fg); font-weight: 600; }
+.date { color: var(--muted); }
+.images { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+.images a { text-decoration: none; color: var(--fg); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.images img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--surface); }
+.images span { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pager { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.pager button { border: 0; background: none; color: var(--link); cursor: pointer; min-width: 34px; height: 34px; border-radius: 50%; font-size: 14px; }
+.pager button:hover { background: var(--surface); }
+.pager button.on { color: var(--fg); font-weight: 600; cursor: default; background: none; }
+.pager button:disabled { color: var(--muted); cursor: default; }
+.empty h2 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0 0 8px; }
+.skeleton { height: 92px; border-radius: 10px; background: var(--surface); max-width: 652px; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+footer { background: var(--surface); color: var(--muted); font-size: 13px; padding: 14px 16px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+footer button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0; }
+footer button:hover { color: var(--fg); }
+
+@media (max-width: 760px) {
+  .topbar { gap: 12px; padding-top: 12px; }
+  .topbar .logo { font-size: 26px; }
+  .tabs, main { padding-left: 0; }
+  .result h3 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<section id="home">
+  <div class="logo" aria-label="Scout"><span>S</span><span>c</span><span>o</span><span>u</span><span>t</span></div>
+  <form class="box" id="homeForm" role="search">
+    <div class="field">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 9.5 16a6.5 6.5 0 0 0 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+      <input id="homeQ" type="search" autocomplete="off" aria-label="Search" placeholder="Search the web">
+      <button type="button" class="clear" aria-label="Clear" hidden>×</button>
+    </div>
+    <ul class="suggest" role="listbox" hidden></ul>
+  </form>
+  <div class="buttons">
+    <button class="btn" id="searchBtn" type="button">Scout Search</button>
+    <button class="btn" id="luckyBtn" type="button">I'm Feeling Lucky</button>
+  </div>
+  <div class="trending" id="trending"><span class="label">Trending</span></div>
+</section>
+
+<section id="results" hidden>
+  <header class="topbar">
+    <a class="logo" id="homeLink" href="#" aria-label="Scout home"><span>S</span><span>c</span><span>o</span><span>u</span><span>t</span></a>
+    <form class="box" id="topForm" role="search">
+      <div class="field">
+        <input id="topQ" type="search" autocomplete="off" aria-label="Search">
+        <button type="button" class="clear" aria-label="Clear" hidden>×</button>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 9.5 16a6.5 6.5 0 0 0 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+      </div>
+      <ul class="suggest" role="listbox" hidden></ul>
+    </form>
+    <nav class="tabs">
+      <button class="tab on" data-tab="all" type="button">All</button>
+      <button class="tab" data-tab="images" type="button">Images</button>
+    </nav>
+  </header>
+  <main id="out"></main>
+</section>
+
+<footer>
+  <span>Scout · results from Wikipedia</span>
+  <span><button type="button" id="themeBtn">Switch theme</button> · <button type="button" id="historyBtn">Clear search history</button></span>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const API = "https://en.wikipedia.org/w/api.php";
+  const PER_PAGE = 10;
+  const state = { q: "", tab: "all", page: 1 };
+
+  // Built-in index, used when the live API can't be reached.
+  const LOCAL = [
+    ["Wikipedia", "https://en.wikipedia.org", "The free encyclopedia that anyone can edit, with over 6 million articles in English.", "encyclopedia reference knowledge wiki"],
+    ["YouTube", "https://www.youtube.com", "Watch videos, music, tutorials and live streams from creators around the world.", "video music watch stream"],
+    ["OpenStreetMap", "https://www.openstreetmap.org", "A free, editable map of the whole world, built by volunteers.", "map maps directions navigation"],
+    ["Weather.gov", "https://www.weather.gov", "Forecasts, warnings and radar from the US National Weather Service.", "weather forecast rain radar"],
+    ["GitHub", "https://github.com", "Where developers host code, review pull requests and collaborate on software.", "code git programming developer software"],
+    ["MDN Web Docs", "https://developer.mozilla.org", "Documentation for HTML, CSS, JavaScript and web APIs.", "html css javascript web docs programming"],
+    ["Stack Overflow", "https://stackoverflow.com", "Questions and answers for programmers.", "programming code questions help"],
+    ["Kelley Blue Book", "https://www.kbb.com", "Car values, new and used car prices, reviews and comparisons.", "car cars price value used new auto"],
+    ["Edmunds", "https://www.edmunds.com", "Car reviews, pricing tools and buying advice.", "car cars review buying auto"],
+    ["NHTSA Recalls", "https://www.nhtsa.gov/recalls", "Check whether your vehicle has an open safety recall by VIN.", "car recall vin safety vehicle"],
+    ["Fuel Economy", "https://www.fueleconomy.gov", "Official MPG ratings and fuel costs for cars and trucks.", "car mpg fuel gas economy electric"],
+    ["BBC News", "https://www.bbc.com/news", "World news, analysis and video from the BBC.", "news world headlines"],
+    ["Reuters", "https://www.reuters.com", "Breaking international news and business coverage.", "news business world markets"],
+    ["Khan Academy", "https://www.khanacademy.org", "Free courses in math, science, history and more.", "learn math science school education"],
+    ["Duolingo", "https://www.duolingo.com", "Learn a language with short daily lessons.", "language learn spanish french"],
+    ["Allrecipes", "https://www.allrecipes.com", "Recipes rated and reviewed by home cooks.", "recipe recipes cooking food dinner"],
+    ["NASA", "https://www.nasa.gov", "News and images from space missions, telescopes and astronauts.", "space nasa planets moon mars astronomy"],
+    ["Internet Archive", "https://archive.org", "Free books, movies, music and the Wayback Machine.", "archive books history old websites"],
+    ["Project Gutenberg", "https://www.gutenberg.org", "Over 70,000 free ebooks of classic literature.", "books ebooks read literature free"],
+    ["Time and Date", "https://www.timeanddate.com", "World clock, calendars, time zones and countdowns.", "time clock calendar timezone date"],
+    ["XE Currency", "https://www.xe.com", "Live exchange rates and a currency converter.", "currency exchange money convert dollar euro"],
+    ["Desmos Calculator", "https://www.desmos.com/calculator", "A free graphing calculator in your browser.", "calculator math graph"],
+    ["Spotify", "https://open.spotify.com", "Stream music and podcasts.", "music songs podcast stream"],
+    ["Reddit", "https://www.reddit.com", "Communities and discussions on every topic.", "forum community discussion"],
+    ["DuckDuckGo", "https://duckduckgo.com", "A private search engine for the whole web.", "search web engine private"]
+  ];
+  const TRENDING = ["Electric cars", "Solar eclipse", "Formula One", "Black holes", "Tesla Model 3", "Pyramids of Giza"];
+
+  const store = {
+    get() { try { return JSON.parse(localStorage.getItem("scout-history") || "[]"); } catch { return []; } },
+    add(q) { try { const h = [q, ...this.get().filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 8); localStorage.setItem("scout-history", JSON.stringify(h)); } catch {} },
+    clear() { try { localStorage.removeItem("scout-history"); } catch {} }
+  };
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const wikiUrl = t => "https://en.wikipedia.org/wiki/" + encodeURIComponent(t.replace(/ /g, "_"));
+  // Wikipedia snippets mark matches with <span class="searchmatch">; keep only that markup, as <b>.
+  const cleanSnippet = html => {
+    const d = document.createElement("div"); d.innerHTML = html;
+    d.querySelectorAll(".searchmatch").forEach(s => s.replaceWith(Object.assign(document.createElement("b"), { textContent: s.textContent })));
+    return [...d.childNodes].map(n => n.nodeName === "B" ? "<b>" + esc(n.textContent) + "</b>" : esc(n.textContent)).join("");
+  };
+  const highlight = (text, q) => {
+    const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 1).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    let out = esc(text);
+    if (words.length) out = out.replace(new RegExp("\\b(" + words.join("|") + ")", "gi"), "<b>$1</b>");
+    return out;
+  };
+
+  async function api(params) {
+    const url = API + "?" + new URLSearchParams({ format: "json", origin: "*", ...params });
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+
+  function localSearch(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return LOCAL.map(([title, url, desc, tags]) => {
+      const hay = (title + " " + desc + " " + tags).toLowerCase();
+      const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0) + (title.toLowerCase().includes(w) ? 2 : 0), 0);
+      return { title, url, desc, score };
+    }).filter(r => r.score > 0).sort((a, b) => b.score - a.score);
+  }
+
+  // ---------- Suggestions ----------
+  function setupBox(form, input) {
+    const list = $(".suggest", form), clear = $(".clear", form);
+    let items = [], active = -1, timer, token = 0;
+    const close = () => { list.hidden = true; form.classList.remove("open"); active = -1; };
+    const render = (q) => {
+      if (!items.length) return close();
+      list.innerHTML = items.map((it, i) => {
+        const icon = it.past
+          ? '<svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 2 4.9l-1.4 1.4A9 9 0 1 0 13 3zm-1 5v5l4.3 2.5.7-1.2-3.5-2.1V8z"/></svg>'
+          : '<svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 9.5 16a6.5 6.5 0 0 0 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>';
+        const t = it.text, k = q && t.toLowerCase().startsWith(q.toLowerCase()) ? q.length : 0;
+        return `<li role="option" data-i="${i}" class="${i === active ? "active" : ""}">${icon}<span>${esc(t.slice(0, k))}<b>${esc(t.slice(k))}</b></span></li>`;
+      }).join("");
+      list.hidden = false; form.classList.add("open");
+    };
+    const update = async () => {
+      const q = input.value.trim(), my = ++token;
+      clear.hidden = !input.value;
+      const past = store.get().filter(h => h.toLowerCase().startsWith(q.toLowerCase())).slice(0, q ? 3 : 6).map(text => ({ text, past: true }));
+      items = past; active = -1; render(q);
+      if (!q) return;
+      let more = [];
+      try {
+        const [, titles] = await api({ action: "opensearch", search: q, limit: 8, namespace: 0 });
+        more = titles;
+      } catch {
+        more = LOCAL.map(r => r[0]).filter(t => t.toLowerCase().includes(q.toLowerCase()));
+      }
+      if (my !== token) return;
+      const seen = new Set(past.map(p => p.text.toLowerCase()));
+      items = past.concat(more.filter(t => !seen.has(t.toLowerCase())).slice(0, 8 - past.length).map(text => ({ text })));
+      render(q);
+    };
+    input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(update, 150); });
+    input.addEventListener("focus", update);
+    input.addEventListener("keydown", e => {
+      if (list.hidden || !items.length) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        active = (active + (e.key === "ArrowDown" ? 1 : -1) + items.length + 1) % (items.length + 1);
+        if (active === items.length) active = -1;
+        if (active >= 0) input.value = items[active].text;
+        render(input.value);
+      } else if (e.key === "Escape") close();
+    });
+    list.addEventListener("mousedown", e => {
+      const li = e.target.closest("li"); if (!li) return;
+      e.preventDefault(); input.value = items[+li.dataset.i].text; close(); go(input.value);
+    });
+    input.addEventListener("blur", () => setTimeout(close, 100));
+    clear.addEventListener("click", () => { input.value = ""; input.focus(); update(); });
+    form.addEventListener("submit", e => { e.preventDefault(); close(); go(input.value); });
+    return { close };
+  }
+
+  const homeBox = setupBox($("#homeForm"), $("#homeQ"));
+  const topBox = setupBox($("#topForm"), $("#topQ"));
+
+  // ---------- Navigation ----------
+  function showHome() {
+    $("#results").hidden = true; $("#home").hidden = false;
+    $("#homeQ").value = ""; state.q = ""; document.title = "Scout Search";
+  }
+  function go(q, opts = {}) {
+    q = q.trim(); if (!q) return;
+    state.q = q; state.page = opts.page || 1; if (opts.tab) state.tab = opts.tab;
+    store.add(q);
+    $("#home").hidden = true; $("#results").hidden = false;
+    $("#topQ").value = q; $(".clear", $("#topForm")).hidden = false;
+    document.title = q + " - Scout Search";
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === state.tab));
+    window.scrollTo(0, 0);
+    state.tab === "images" ? runImages() : runAll();
+  }
+
+  async function lucky() {
+    const q = $("#homeQ").value.trim(); if (!q) return;
+    try {
+      const d = await api({ action: "query", list: "search", srsearch: q, srlimit: 1 });
+      const hit = d.query.search[0];
+      if (hit) { location.href = wikiUrl(hit.title); return; }
+    } catch {
+      const hit = localSearch(q)[0];
+      if (hit) { location.href = hit.url; return; }
+    }
+    go(q);
+  }
+
+  // ---------- Rendering ----------
+  const out = $("#out");
+  const loading = () => { out.innerHTML = '<div class="stats">Searching…</div>' + '<div class="skeleton"></div>'.repeat(4); };
+  const resultHtml = (r) => {
+    const host = new URL(r.url).hostname.replace(/^www\./, "");
+    const path = decodeURIComponent(new URL(r.url).pathname).replace(/\/$/, "").split("/").filter(Boolean).join(" › ");
+    return `<article class="result">
+      <a class="site" href="${esc(r.url)}" target="_blank" rel="noopener">
+        <span class="fav" aria-hidden="true">${esc(r.site[0])}</span>
+        <span><div class="name">${esc(r.site)}</div><div class="url">https://${esc(host)}${path ? " › " + esc(path) : ""}</div></span>
+      </a>
+      <h3><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a></h3>
+      <p class="snippet">${r.date ? `<span class="date">${esc(r.date)} — </span>` : ""}${r.snippet}</p>
+    </article>`;
+  };
+  const pager = (total) => {
+    const pages = Math.min(10, Math.ceil(total / PER_PAGE));
+    if (pages < 2) return "";
+    let h = `<nav class="pager" aria-label="Pages"><button data-p="${state.page - 1}" ${state.page === 1 ? "disabled" : ""}>‹ Previous</button>`;
+    for (let p = 1; p <= pages; p++) h += `<button data-p="${p}" class="${p === state.page ? "on" : ""}" ${p === state.page ? 'aria-current="page"' : ""}>${p}</button>`;
+    return h + `<button data-p="${state.page + 1}" ${state.page === pages ? "disabled" : ""}>Next ›</button></nav>`;
+  };
+  const noResults = (q) => `<div class="empty"><h2>No results for “${esc(q)}”</h2>
+    <p class="snippet">Check the spelling, try fewer or more general words, or <a href="https://duckduckgo.com/?q=${encodeURIComponent(q)}" target="_blank" rel="noopener">search the whole web on DuckDuckGo</a>.</p></div>`;
+
+  async function runAll() {
+    loading();
+    const q = state.q, t0 = performance.now();
+    try {
+      const d = await api({ action: "query", list: "search", srsearch: q, srlimit: PER_PAGE, sroffset: (state.page - 1) * PER_PAGE, srinfo: "totalhits|suggestion" });
+      if (q !== state.q) return;
+      const secs = ((performance.now() - t0) / 1000).toFixed(2);
+      const total = d.query.searchinfo.totalhits, hits = d.query.search;
+      const sug = d.query.searchinfo.suggestion;
+      let h = "";
+      if (sug) h += `<div class="stats">Did you mean: <a href="#" data-q="${esc(sug)}"><b><i>${esc(sug)}</i></b></a></div>`;
+      if (!hits.length) { out.innerHTML = h + noResults(q); return; }
+      h += `<div class="stats">${state.page > 1 ? `Page ${state.page} of a` : "A"}bout ${total.toLocaleString()} results (${secs} seconds)</div>`;
+      h += hits.map(x => resultHtml({
+        title: x.title, url: wikiUrl(x.title), site: "Wikipedia",
+        snippet: cleanSnippet(x.snippet) + "…",
+        date: new Date(x.timestamp).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+      })).join("");
+      out.innerHTML = h + pager(total);
+    } catch {
+      if (q !== state.q) return;
+      const hits = localSearch(q);
+      let h = `<div class="notice">Live results are unavailable here, so these come from Scout's built-in index of popular sites. <a href="https://duckduckgo.com/?q=${encodeURIComponent(q)}" target="_blank" rel="noopener">Search the whole web for “${esc(q)}”</a></div>`;
+      if (!hits.length) { out.innerHTML = h + noResults(q); return; }
+      h += `<div class="stats">${hits.length} result${hits.length > 1 ? "s" : ""}</div>`;
+      out.innerHTML = h + hits.map(r => resultHtml({ title: r.title, url: r.url, site: r.title, snippet: highlight(r.desc, q) })).join("");
+    }
+  }
+
+  async function runImages() {
+    out.innerHTML = '<div class="stats">Searching…</div><div class="images">' + '<div class="skeleton" style="height:140px"></div>'.repeat(8) + "</div>";
+    const q = state.q;
+    try {
+      const d = await api({ action: "query", generator: "search", gsrsearch: q, gsrlimit: 30, prop: "pageimages", piprop: "thumbnail", pithumbsize: 400 });
+      if (q !== state.q) return;
+      const pages = Object.values(d.query?.pages || {}).filter(p => p.thumbnail).sort((a, b) => a.index - b.index);
+      if (!pages.length) { out.innerHTML = noResults(q); return; }
+      out.innerHTML = `<div class="stats">${pages.length} images</div><div class="images">` + pages.map(p =>
+        `<a href="${esc(wikiUrl(p.title))}" target="_blank" rel="noopener"><img src="${esc(p.thumbnail.source)}" alt="${esc(p.title)}" loading="lazy"><span>${esc(p.title)}</span></a>`
+      ).join("") + "</div>";
+    } catch {
+      if (q !== state.q) return;
+      out.innerHTML = `<div class="notice">Image search needs a live connection, which isn't available here. <a href="https://duckduckgo.com/?q=${encodeURIComponent(q)}&iax=images&ia=images" target="_blank" rel="noopener">Search images for “${esc(q)}” on DuckDuckGo</a></div>`;
+    }
+  }
+
+  // ---------- Wiring ----------
+  $("#searchBtn").addEventListener("click", () => go($("#homeQ").value));
+  $("#luckyBtn").addEventListener("click", lucky);
+  $("#homeLink").addEventListener("click", e => { e.preventDefault(); showHome(); });
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => go(state.q, { tab: t.dataset.tab })));
+  out.addEventListener("click", e => {
+    const p = e.target.closest("[data-p]");
+    if (p && !p.disabled && !p.classList.contains("on")) go(state.q, { page: +p.dataset.p });
+    const s = e.target.closest("[data-q]");
+    if (s) { e.preventDefault(); go(s.dataset.q); }
+  });
+  const trend = $("#trending");
+  TRENDING.forEach(t => {
+    const b = Object.assign(document.createElement("button"), { type: "button", className: "chip", textContent: t });
+    b.addEventListener("click", () => go(t));
+    trend.append(b);
+  });
+  $("#themeBtn").addEventListener("click", () => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+  });
+  $("#historyBtn").addEventListener("click", e => { store.clear(); e.target.textContent = "History cleared"; setTimeout(() => e.target.textContent = "Clear search history", 1500); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); ($("#home").hidden ? $("#topQ") : $("#homeQ")).focus(); }
+  });
+})();
+</script>
+</body>
+</html>
