@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Car Game</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #3a8f3a; font-family: system-ui, sans-serif; }
+  canvas { display: block; touch-action: none; }
+  #hud {
+    position: fixed; top: 12px; left: 12px; color: #fff; font-weight: 700;
+    text-shadow: 0 2px 3px rgba(0,0,0,.6); user-select: none;
+  }
+  #fuelBar { width: 180px; height: 18px; border: 3px solid #fff; border-radius: 10px; overflow: hidden; margin-top: 4px; background: rgba(0,0,0,.35); }
+  #fuel { height: 100%; width: 100%; background: #ffd23f; transition: background .2s; }
+  #msg {
+    position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    color: #fff; font-size: 34px; font-weight: 800; text-align: center;
+    text-shadow: 0 3px 6px rgba(0,0,0,.7); pointer-events: none; user-select: none;
+  }
+  .pad { position: fixed; bottom: 20px; display: flex; gap: 12px; user-select: none; }
+  .pad button {
+    width: 72px; height: 72px; border-radius: 50%; border: 3px solid #fff;
+    background: rgba(0,0,0,.35); color: #fff; font-size: 30px; touch-action: none;
+  }
+  #left { left: 16px; } #right { right: 16px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div>⛽ Fuel</div>
+  <div id="fuelBar"><div id="fuel"></div></div>
+  <div id="visits" style="margin-top:6px">Gas stations visited: 0</div>
+</div>
+<div id="msg"></div>
+<div class="pad" id="left"><button data-k="left">◀</button><button data-k="right">▶</button></div>
+<div class="pad" id="right"><button data-k="down">▼</button><button data-k="up">▲</button></div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+addEventListener('resize', resize); resize();
+
+// World layout: roads on a grid, grass in every block between them.
+const BLOCK = 700;   // distance between road centers
+const ROAD = 120;    // road width
+const GRASS = BLOCK - ROAD;
+const CELLS = 3;     // each grass block is split into CELLS x CELLS spots
+const STATION_W = 120, STATION_H = 100;
+
+// Deterministic random so the same block always has the same stations.
+function rand(a, b, c) {
+  let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+const STATION_COLORS = ['#e63946', '#1d72d8', '#2a9d8f', '#f4a261', '#9b5de5', '#ff6fb5'];
+const blockCache = new Map();
+function stationsInBlock(bx, by) {
+  const key = bx + ',' + by;
+  if (blockCache.has(key)) return blockCache.get(key);
+  const list = [];
+  const x0 = bx * BLOCK + ROAD / 2, y0 = by * BLOCK + ROAD / 2;
+  const cell = GRASS / CELLS;
+  for (let i = 0; i < CELLS; i++) for (let j = 0; j < CELLS; j++) {
+    if (rand(bx * 7 + i, by * 7 + j, 1) < 0.25) continue; // leave a few gaps
+    const x = x0 + i * cell + 8 + rand(bx, by, i * 10 + j + 2) * (cell - STATION_W - 16);
+    const y = y0 + j * cell + 8 + rand(bx, by, i * 10 + j + 50) * (cell - STATION_H - 16);
+    const color = STATION_COLORS[Math.floor(rand(bx, by, i * 10 + j + 99) * STATION_COLORS.length)];
+    list.push({ x, y, color, id: key + ':' + i + ':' + j });
+  }
+  blockCache.set(key, list);
+  return list;
+}
+
+function onRoad(x, y) {
+  const mx = ((x % BLOCK) + BLOCK) % BLOCK, my = ((y % BLOCK) + BLOCK) % BLOCK;
+  return mx < ROAD / 2 || mx > BLOCK - ROAD / 2 || my < ROAD / 2 || my > BLOCK - ROAD / 2;
+}
+
+function stationAt(x, y) {
+  const bx = Math.floor(x / BLOCK), by = Math.floor(y / BLOCK);
+  for (const s of stationsInBlock(bx, by)) {
+    if (x > s.x && x < s.x + STATION_W && y > s.y && y < s.y + STATION_H) return s;
+  }
+  return null;
+}
+
+// Car
+const car = { x: ROAD / 4, y: BLOCK / 2, angle: -Math.PI / 2, speed: 0, fuel: 100 };
+const keys = {};
+const keyMap = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+addEventListener('keydown', e => { if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); } });
+addEventListener('keyup', e => { if (keyMap[e.code]) keys[keyMap[e.code]] = false; });
+document.querySelectorAll('.pad button').forEach(b => {
+  const k = b.dataset.k;
+  b.addEventListener('pointerdown', e => { keys[k] = true; b.setPointerCapture(e.pointerId); });
+  const up = () => { keys[k] = false; };
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+});
+
+const visited = new Set();
+const fuelEl = document.getElementById('fuel');
+const visitsEl = document.getElementById('visits');
+const msgEl = document.getElementById('msg');
+
+function update(dt) {
+  const grass = !onRoad(car.x, car.y);
+  const maxSpeed = grass ? 220 : 380;
+  const hasFuel = car.fuel > 0;
+
+  if (keys.up && hasFuel) car.speed += 420 * dt;
+  if (keys.down && hasFuel) car.speed -= 520 * dt;
+  car.speed *= Math.pow(grass ? 0.35 : 0.6, dt); // friction
+  car.speed = Math.max(-150, Math.min(maxSpeed, car.speed));
+  if (Math.abs(car.speed) < 2 && !keys.up && !keys.down) car.speed = 0;
+
+  const turn = (keys.left ? -1 : 0) + (keys.right ? 1 : 0);
+  car.angle += turn * 2.8 * dt * Math.min(1, Math.abs(car.speed) / 120) * Math.sign(car.speed || 1);
+
+  car.x += Math.cos(car.angle) * car.speed * dt;
+  car.y += Math.sin(car.angle) * car.speed * dt;
+  car.fuel = Math.max(0, car.fuel - Math.abs(car.speed) * dt * 0.012);
+
+  const s = stationAt(car.x, car.y);
+  if (s) {
+    car.fuel = Math.min(100, car.fuel + 35 * dt);
+    if (!visited.has(s.id)) { visited.add(s.id); visitsEl.textContent = 'Gas stations visited: ' + visited.size; }
+    msgEl.textContent = car.fuel >= 100 ? 'Tank full! ⛽' : 'Filling up... ⛽';
+  } else if (car.fuel <= 0) {
+    msgEl.textContent = 'Out of gas! Push to a gas station 😅';
+    car.speed += (keys.up ? 60 : keys.down ? -60 : 0) * dt; // a slow push
+  } else {
+    msgEl.textContent = '';
+  }
+
+  fuelEl.style.width = car.fuel + '%';
+  fuelEl.style.background = car.fuel < 20 ? '#ff4d4d' : '#ffd23f';
+}
+
+function drawStation(s) {
+  const { x, y, color } = s;
+  ctx.fillStyle = '#b8b8b8';                       // concrete pad
+  ctx.fillRect(x, y, STATION_W, STATION_H);
+  ctx.fillStyle = '#f1f1f1';                       // shop
+  ctx.fillRect(x + 6, y + 6, 46, 30);
+  ctx.fillStyle = color;
+  ctx.fillRect(x + 6, y + 6, 46, 8);
+  ctx.fillStyle = '#6ec6ff';
+  ctx.fillRect(x + 14, y + 20, 12, 10); ctx.fillRect(x + 32, y + 20, 12, 10);
+  ctx.fillStyle = '#333';                          // pumps
+  for (let i = 0; i < 3; i++) ctx.fillRect(x + 22 + i * 32, y + 62, 10, 16);
+  ctx.globalAlpha = 0.85;                          // canopy
+  ctx.fillStyle = color;
+  ctx.fillRect(x + 10, y + 50, STATION_W - 20, 10);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#fff';                          // sign
+  ctx.fillRect(x + 66, y + 8, 46, 26);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 14px system-ui';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('GAS', x + 89, y + 21);
+}
+
+function drawCar() {
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle);
+  ctx.fillStyle = 'rgba(0,0,0,.3)';
+  ctx.fillRect(-20, -11, 44, 26);
+  ctx.fillStyle = '#111';                          // wheels
+  ctx.fillRect(-16, -14, 10, 5); ctx.fillRect(8, -14, 10, 5);
+  ctx.fillRect(-16, 9, 10, 5); ctx.fillRect(8, 9, 10, 5);
+  ctx.fillStyle = '#ff3b3b';                       // body
+  ctx.beginPath(); ctx.roundRect(-22, -11, 44, 22, 6); ctx.fill();
+  ctx.fillStyle = '#9fd8ff';                       // windows
+  ctx.fillRect(4, -8, 8, 16); ctx.fillRect(-14, -8, 6, 16);
+  ctx.fillStyle = '#ffef8a';                       // headlights
+  ctx.fillRect(19, -9, 3, 5); ctx.fillRect(19, 4, 3, 5);
+  ctx.restore();
+}
+
+function draw() {
+  const w = canvas.width, h = canvas.height;
+  const camX = car.x - w / 2, camY = car.y - h / 2;
+  ctx.fillStyle = '#3a8f3a';
+  ctx.fillRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(-camX, -camY);
+
+  const bx0 = Math.floor(camX / BLOCK) - 1, bx1 = Math.floor((camX + w) / BLOCK) + 1;
+  const by0 = Math.floor(camY / BLOCK) - 1, by1 = Math.floor((camY + h) / BLOCK) + 1;
+
+  // grass texture specks
+  ctx.fillStyle = '#348234';
+  for (let bx = bx0; bx <= bx1; bx++) for (let by = by0; by <= by1; by++) {
+    for (let i = 0; i < 40; i++) {
+      ctx.fillRect(bx * BLOCK + rand(bx, by, i + 500) * BLOCK, by * BLOCK + rand(bx, by, i + 900) * BLOCK, 6, 3);
+    }
+  }
+
+  // roads
+  ctx.fillStyle = '#444';
+  for (let bx = bx0; bx <= bx1; bx++) ctx.fillRect(bx * BLOCK - ROAD / 2, by0 * BLOCK, ROAD, (by1 - by0 + 1) * BLOCK);
+  for (let by = by0; by <= by1; by++) ctx.fillRect(bx0 * BLOCK, by * BLOCK - ROAD / 2, (bx1 - bx0 + 1) * BLOCK, ROAD);
+  ctx.fillStyle = '#f5d000';                       // dashed center lines
+  for (let bx = bx0; bx <= bx1; bx++) for (let y = by0 * BLOCK; y < (by1 + 1) * BLOCK; y += 50) {
+    if (!onRoad(bx * BLOCK + ROAD, y + 12)) ctx.fillRect(bx * BLOCK - 3, y, 6, 25);
+  }
+  for (let by = by0; by <= by1; by++) for (let x = bx0 * BLOCK; x < (bx1 + 1) * BLOCK; x += 50) {
+    if (!onRoad(x + 12, by * BLOCK + ROAD)) ctx.fillRect(x, by * BLOCK - 3, 25, 6);
+  }
+
+  // gas stations on the grass
+  for (let bx = bx0; bx <= bx1; bx++) for (let by = by0; by <= by1; by++) {
+    stationsInBlock(bx, by).forEach(drawStation);
+  }
+
+  drawCar();
+  ctx.restore();
+}
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
