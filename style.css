@@ -1,0 +1,146 @@
+:root {
+  --bg: #0b1220;
+  --panel: rgba(22, 28, 41, 0.8);
+  --road: #242c38;
+  --lane: rgba(255, 255, 255, 0.3);
+  --grass: #1d8c5a;
+  --grass-dark: #0e6b46;
+  --player: #4ca8ff;
+  --enemy: #ff5a5f;
+  --enemy-2: #f7b801;
+  --enemy-3: #7bd389;
+  --text: #eff6ff;
+  --shadow: rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 20px 0;
+  background: radial-gradient(circle at top, #17334d 0%, var(--bg) 50%);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.game-shell {
+  position: relative;
+  width: min(88vw, 430px, calc((100svh - 120px) * 7 / 12));
+  margin: auto;
+}
+
+.hud {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 22px);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 24px var(--shadow);
+  font-weight: 700;
+  z-index: 2;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(to bottom, #6aa0d5 0%, #80b5ea 18%, #1b2430 18%, #111924 100%);
+}
+
+.message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: rgba(10, 16, 24, 0.5);
+  border-radius: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+.message.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.message h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 7vw, 3.3rem);
+}
+
+.message p {
+  margin: 0;
+  font-size: 1.05rem;
+  opacity: 0.9;
+}
+
+.action-button,
+.control-button {
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #1e73bd;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.action-button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  border-radius: 999px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 14px 0 0;
+  color: rgba(239, 246, 255, 0.78);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.control-button {
+  width: 58px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 1.5rem;
+}
+
+.action-button:hover,
+.control-button:hover {
+  background: #2b8be0;
+}
+
+.action-button:active,
+.control-button:active {
+  transform: scale(0.96);
+}
+
+.action-button:focus-visible,
+.control-button:focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 3px;
+}

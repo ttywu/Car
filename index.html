@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="description" content="Play Car Dash, a free browser car game. Dodge traffic, beat your high score, and play on desktop or mobile." />
+    <title>Car Dash - Free Browser Car Game</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="game-shell">
+      <div class="hud" aria-label="Game scores">
+        <div>Score: <span id="score" aria-live="polite">0</span></div>
+        <div>Best: <span id="best">0</span></div>
+      </div>
+
+      <canvas id="gameCanvas" width="420" height="720" aria-label="Car racing game"></canvas>
+
+      <div id="message" class="message visible">
+        <div>
+          <h1>Car Dash</h1>
+          <p>Dodge traffic with the arrow keys, A/D, or the buttons below.</p>
+          <button class="action-button" type="button" data-action="start">Start game</button>
+        </div>
+      </div>
+
+      <div class="controls" aria-label="Game controls">
+        <button class="control-button" type="button" data-direction="-1" aria-label="Steer left">←</button>
+        <span>Steer</span>
+        <button class="control-button" type="button" data-direction="1" aria-label="Steer right">→</button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
