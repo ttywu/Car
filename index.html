@@ -13,22 +13,35 @@
       <div class="hud" aria-label="Game scores">
         <div>Score: <span id="score" aria-live="polite">0</span></div>
         <div>Best: <span id="best">0</span></div>
+        <div class="fuel-display">
+          <span>Gas: <span id="fuel">100%</span></span>
+          <div id="fuelMeter" class="fuel-meter" role="progressbar" aria-label="Gas remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <span id="fuelBar"></span>
+          </div>
+        </div>
       </div>
+      <div id="winMessage" class="win-message" role="status" aria-live="polite"></div>
 
       <canvas id="gameCanvas" width="420" height="720" aria-label="Car racing game"></canvas>
 
       <div id="message" class="message visible">
         <div>
           <h1>Car Dash</h1>
-          <p>Dodge traffic with the arrow keys, A/D, or the buttons below.</p>
+          <p>Dodge traffic with ←/→ or A/D. Hold ↑/W for gas, and pull into the matching edge lane at a gas station to refuel.</p>
           <button class="action-button" type="button" data-action="start">Start game</button>
         </div>
       </div>
 
       <div class="controls" aria-label="Game controls">
-        <button class="control-button" type="button" data-direction="-1" aria-label="Steer left">←</button>
-        <span>Steer</span>
-        <button class="control-button" type="button" data-direction="1" aria-label="Steer right">→</button>
+        <div class="control-row" aria-label="Steering">
+          <button class="control-button" type="button" data-direction="-1" aria-label="Steer left">←</button>
+          <span>Steer</span>
+          <button class="control-button" type="button" data-direction="1" aria-label="Steer right">→</button>
+        </div>
+        <div class="control-row pedal-row" aria-label="Speed">
+          <button class="control-button pedal-button" type="button" data-pedal="back" aria-label="Back and slow down">▼ Back</button>
+          <button class="control-button pedal-button gas-button" type="button" data-pedal="gas" aria-label="Hold to use gas">▲ Gas</button>
+        </div>
       </div>
     </div>
 

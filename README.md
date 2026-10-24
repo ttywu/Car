@@ -3,8 +3,16 @@
 A browser-based car game. Once published, it will be available at
 <https://ttywu.github.io/Car/>.
 
-Use the Left/Right arrow keys or A/D to dodge traffic. On touch screens, use
-the steering buttons below the road. Your best score is saved in your browser.
+Use the Left/Right arrow keys or A/D to dodge traffic. Hold Up/W to accelerate
+and Down/S to slow down. Pull into the matching edge lane as a gas station
+passes to refill your fuel. On touch screens, use the steering and pedal buttons
+below the road. Hit another car to win; use Play again to start a new run. Your
+best score is saved in your browser.
+
+## Playing locally
+
+In VS Code, run **Terminal: Run Task** and choose **Play Car Dash (local
+server)**. Then open <http://localhost:8000/> in a browser.
 
 ## Publishing
 
