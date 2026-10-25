@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1120" />
+    <meta name="description" content="Control a Beyond Power resistance machine from your PC over Bluetooth." />
+    <title>Beyond Power Control</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="icon.svg" alt="" width="32" height="32" />
+        <h1>Beyond Power Control</h1>
+      </div>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Not connected</span>
+      </div>
+      <div class="top-actions">
+        <button id="installBtn" class="ghost" hidden>Install app</button>
+        <button id="demoBtn" class="ghost">Demo mode</button>
+        <button id="connectBtn" class="primary">Connect machine</button>
+      </div>
+    </header>
+
+    <p id="btWarning" class="banner" hidden>
+      This browser can't use Bluetooth. Open the app in Chrome or Edge on Windows, macOS, or Linux.
+    </p>
+
+    <main class="layout">
+      <section class="card control">
+        <div class="weight-row">
+          <button class="step" data-step="-5">−5</button>
+          <button class="step" data-step="-1">−1</button>
+          <div class="weight-display">
+            <span id="weightValue">20</span>
+            <button id="unitBtn" class="unit" title="Switch units">lb</button>
+          </div>
+          <button class="step" data-step="1">+1</button>
+          <button class="step" data-step="5">+5</button>
+        </div>
+        <input id="weightSlider" type="range" min="5" max="200" step="1" value="20" aria-label="Target weight" />
+
+        <div class="mode-row" role="radiogroup" aria-label="Resistance mode">
+          <button class="mode active" data-mode="0">Weight</button>
+          <button class="mode" data-mode="1">Eccentric</button>
+          <button class="mode" data-mode="2">Chains</button>
+          <button class="mode" data-mode="3">Isokinetic</button>
+          <button class="mode" data-mode="4">Elastic</button>
+        </div>
+
+        <div class="load-row">
+          <button id="loadBtn" class="load">Load</button>
+          <button id="stopBtn" class="stop" title="Esc">STOP / Unload</button>
+        </div>
+        <p class="hint">Press <kbd>Esc</kbd> any time to unload. Load stays off until you press Load.</p>
+      </section>
+
+      <section class="card stats">
+        <div class="stat"><span class="label">Reps</span><span id="repValue" class="value">0</span></div>
+        <div class="stat"><span class="label">Force</span><span id="forceValue" class="value">–</span></div>
+        <div class="stat"><span class="label">Cable</span><span id="posValue" class="value">–</span></div>
+        <div class="stat"><span class="label">State</span><span id="loadState" class="value">Unloaded</span></div>
+        <canvas id="forceChart" width="600" height="140" aria-label="Live force"></canvas>
+        <button id="resetRepsBtn" class="ghost small">Reset reps</button>
+      </section>
+
+      <section class="card setup">
+        <h2>Machine profile</h2>
+        <p class="muted">
+          Beyond Power has not published its Bluetooth commands. Fill these in from your own
+          capture (for example with nRF Connect), or use the GATT explorer below to find them.
+          Commands are hex bytes; placeholders like <code>{weight_lb:u16le}</code> are filled in
+          when sent.
+        </p>
+        <div class="grid">
+          <label>Device name starts with <input id="pNamePrefix" placeholder="VOLTRA" /></label>
+          <label>Service UUID <input id="pService" placeholder="0000xxxx-0000-1000-8000-00805f9b34fb" /></label>
+          <label>Write characteristic <input id="pWrite" placeholder="UUID" /></label>
+          <label>Notify characteristic <input id="pNotify" placeholder="UUID" /></label>
+          <label>Extra services to explore <input id="pExtra" placeholder="comma-separated UUIDs" /></label>
+          <label>Set weight <input id="cSetWeight" placeholder="01 {weight_lb10:u16le}" /></label>
+          <label>Set mode <input id="cSetMode" placeholder="02 {mode:u8}" /></label>
+          <label>Load <input id="cLoad" placeholder="03 01" /></label>
+          <label>Unload <input id="cUnload" placeholder="03 00" /></label>
+        </div>
+        <details>
+          <summary>Telemetry decoding (optional)</summary>
+          <div class="grid">
+            <label>Force byte offset <input id="tForceOff" type="number" min="0" placeholder="e.g. 2" /></label>
+            <label>Force type
+              <select id="tForceType"><option>u16le</option><option>u16be</option><option>i16le</option><option>u8</option></select>
+            </label>
+            <label>Force scale (÷) <input id="tForceScale" type="number" step="any" placeholder="10" /></label>
+            <label>Position byte offset <input id="tPosOff" type="number" min="0" placeholder="e.g. 4" /></label>
+            <label>Position type
+              <select id="tPosType"><option>u16le</option><option>u16be</option><option>i16le</option><option>u8</option></select>
+            </label>
+            <label>Position scale (÷) <input id="tPosScale" type="number" step="any" placeholder="10" /></label>
+          </div>
+        </details>
+        <div class="row">
+          <button id="saveProfileBtn" class="primary small">Save profile</button>
+          <button id="exportProfileBtn" class="ghost small">Export</button>
+          <label class="ghost small file">Import <input id="importProfile" type="file" accept="application/json" hidden /></label>
+        </div>
+        <p class="muted">Placeholders: weight_lb, weight_kg, weight_lb10, weight_kg10, mode. Types: u8, u16le, u16be, u32le.</p>
+      </section>
+
+      <section class="card explorer">
+        <h2>GATT explorer</h2>
+        <p class="muted">After connecting, every service and characteristic the browser can see is listed here.</p>
+        <div id="gattTree" class="gatt"><p class="muted">Not connected.</p></div>
+      </section>
+
+      <section class="card log-card">
+        <div class="row between">
+          <h2>Log</h2>
+          <button id="clearLogBtn" class="ghost small">Clear</button>
+        </div>
+        <pre id="log" class="log" aria-live="polite"></pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

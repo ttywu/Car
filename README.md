@@ -23,3 +23,8 @@ workflow completes, the game is available at <https://ttywu.github.io/Car/>.
 ## iOS app
 
 See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode.
+
+## Beyond Power Control
+
+A PC app for controlling a Beyond Power resistance machine over Bluetooth
+lives in [beyond-power/](beyond-power/README.md).
