@@ -19,3 +19,7 @@ server)**. Then open <http://localhost:8000/> in a browser.
 The GitHub Actions workflow in `.github/workflows/deploy-pages.yml` publishes
 the site to GitHub Pages whenever changes are pushed to `main`. After the
 workflow completes, the game is available at <https://ttywu.github.io/Car/>.
+
+## iOS app
+
+See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode.
