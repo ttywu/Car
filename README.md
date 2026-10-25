@@ -27,4 +27,5 @@ See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode
 ## Beyond Power Control
 
 A PC app for controlling a Beyond Power resistance machine over Bluetooth
-lives in [beyond-power/](beyond-power/README.md).
+lives in [beyond-power/](beyond-power/README.md). A native Mac version you build
+with Xcode is in [mac/](mac/README.md).

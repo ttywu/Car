@@ -1,0 +1,271 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BD0000000000000000000101 /* BeyondPowerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000201 /* BeyondPowerApp.swift */; };
+		BD0000000000000000000102 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000202 /* ContentView.swift */; };
+		BD0000000000000000000103 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000203 /* AppModel.swift */; };
+		BD0000000000000000000104 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000204 /* BluetoothManager.swift */; };
+		BD0000000000000000000105 /* MachineProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000205 /* MachineProfile.swift */; };
+		BD0000000000000000000106 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BD0000000000000000000206 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		BD0000000000000000000201 /* BeyondPowerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeyondPowerApp.swift; sourceTree = "<group>"; };
+		BD0000000000000000000202 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BD0000000000000000000203 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		BD0000000000000000000204 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
+		BD0000000000000000000205 /* MachineProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachineProfile.swift; sourceTree = "<group>"; };
+		BD0000000000000000000206 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BD0000000000000000000207 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BD0000000000000000000208 /* BeyondPower.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BeyondPower.entitlements; sourceTree = "<group>"; };
+		BD0000000000000000000209 /* Beyond Power Control.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Beyond Power Control.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BD0000000000000000000502 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BD0000000000000000000301 = {
+			isa = PBXGroup;
+			children = (
+				BD0000000000000000000302 /* BeyondPower */,
+				BD0000000000000000000303 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BD0000000000000000000302 /* BeyondPower */ = {
+			isa = PBXGroup;
+			children = (
+				BD0000000000000000000201 /* BeyondPowerApp.swift */,
+				BD0000000000000000000202 /* ContentView.swift */,
+				BD0000000000000000000203 /* AppModel.swift */,
+				BD0000000000000000000204 /* BluetoothManager.swift */,
+				BD0000000000000000000205 /* MachineProfile.swift */,
+				BD0000000000000000000206 /* Assets.xcassets */,
+				BD0000000000000000000207 /* Info.plist */,
+				BD0000000000000000000208 /* BeyondPower.entitlements */,
+			);
+			path = BeyondPower;
+			sourceTree = "<group>";
+		};
+		BD0000000000000000000303 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BD0000000000000000000209 /* Beyond Power Control.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BD0000000000000000000401 /* BeyondPower */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BD0000000000000000000702 /* Build configuration list for PBXNativeTarget "BeyondPower" */;
+			buildPhases = (
+				BD0000000000000000000501 /* Sources */,
+				BD0000000000000000000502 /* Frameworks */,
+				BD0000000000000000000503 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BeyondPower;
+			productName = BeyondPower;
+			productReference = BD0000000000000000000209 /* Beyond Power Control.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BD0000000000000000000601 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					BD0000000000000000000401 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = BD0000000000000000000701 /* Build configuration list for PBXProject "BeyondPower" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BD0000000000000000000301;
+			productRefGroup = BD0000000000000000000303 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BD0000000000000000000401 /* BeyondPower */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BD0000000000000000000503 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BD0000000000000000000106 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BD0000000000000000000501 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BD0000000000000000000101 /* BeyondPowerApp.swift in Sources */,
+				BD0000000000000000000102 /* ContentView.swift in Sources */,
+				BD0000000000000000000103 /* AppModel.swift in Sources */,
+				BD0000000000000000000104 /* BluetoothManager.swift in Sources */,
+				BD0000000000000000000105 /* MachineProfile.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		BD0000000000000000000801 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BD0000000000000000000802 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		BD0000000000000000000803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BeyondPower/BeyondPower.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BeyondPower/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.BeyondPowerControl;
+				PRODUCT_MODULE_NAME = BeyondPower;
+				PRODUCT_NAME = "Beyond Power Control";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		BD0000000000000000000804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BeyondPower/BeyondPower.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BeyondPower/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.BeyondPowerControl;
+				PRODUCT_MODULE_NAME = BeyondPower;
+				PRODUCT_NAME = "Beyond Power Control";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BD0000000000000000000701 /* Build configuration list for PBXProject "BeyondPower" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD0000000000000000000801 /* Debug */,
+				BD0000000000000000000802 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BD0000000000000000000702 /* Build configuration list for PBXNativeTarget "BeyondPower" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD0000000000000000000803 /* Debug */,
+				BD0000000000000000000804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BD0000000000000000000601 /* Project object */;
+}
