@@ -628,6 +628,55 @@ window.addEventListener("beforeinstallprompt", (event) => {
   $("installBtn").hidden = false;
 });
 
+// ---------- desktop app ----------
+
+// In the Windows/Linux/Mac desktop app, the device chooser is drawn here instead of by a browser.
+function setupDesktop() {
+  const desktop = window.bpDesktop;
+  if (!desktop) return;
+  const dialog = $("devicePicker");
+  const list = $("deviceList");
+
+  desktop.onDevices((devices) => {
+    if (!dialog.open) dialog.showModal();
+    if (!devices.length) {
+      list.innerHTML = '<p class="muted">Searching…</p>';
+      return;
+    }
+    list.replaceChildren(
+      ...devices.map((device) => {
+        const btn = document.createElement("button");
+        btn.className = "device";
+        const name = document.createElement("span");
+        name.textContent = device.name;
+        const id = document.createElement("small");
+        id.textContent = device.id;
+        btn.append(name, id);
+        btn.addEventListener("click", () => {
+          desktop.chooseDevice(device.id);
+          dialog.close();
+        });
+        return btn;
+      })
+    );
+  });
+  $("cancelPickerBtn").addEventListener("click", () => {
+    desktop.chooseDevice("");
+    dialog.close();
+  });
+  // Esc closes the dialog; tell the app nothing was picked.
+  dialog.addEventListener("cancel", () => desktop.chooseDevice(""));
+  dialog.addEventListener("close", () => {
+    list.innerHTML = '<p class="muted">Searching…</p>';
+  });
+
+  desktop.onLog(log);
+  desktop.onClosing(async () => {
+    if (state.loaded) await unload();
+    desktop.closeReady();
+  });
+}
+
 // ---------- wiring ----------
 
 function init() {
@@ -685,7 +734,9 @@ function init() {
     if (state.loaded) unload();
   });
 
-  if ("serviceWorker" in navigator) {
+  setupDesktop();
+
+  if ("serviceWorker" in navigator && !window.bpDesktop) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
   log("Ready. Connect your machine or try demo mode.");

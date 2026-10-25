@@ -1,0 +1,82 @@
+{
+  "name": "beyond-power-control",
+  "productName": "Beyond Power Control",
+  "version": "1.0.0",
+  "description": "Control a Beyond Power resistance machine from your computer over Bluetooth.",
+  "homepage": "https://github.com/ttywu/Car",
+  "author": {
+    "name": "Beyond Power Control",
+    "email": "noreply@example.com"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist": "npm run copy-web && electron-builder --publish never",
+    "dist:win": "npm run copy-web && electron-builder --win --publish never",
+    "dist:linux": "npm run copy-web && electron-builder --linux --publish never",
+    "dist:mac": "npm run copy-web && electron-builder --mac --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.17.0"
+  },
+  "build": {
+    "appId": "com.example.beyondpowercontrol",
+    "productName": "Beyond Power Control",
+    "artifactName": "Beyond-Power-Control-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "build/icon.png"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Beyond-Power-Control-${version}-portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "maintainer": "Beyond Power Control <noreply@example.com>",
+      "synopsis": "Control a Beyond Power machine over Bluetooth"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.healthcare-fitness",
+      "extendInfo": {
+        "NSBluetoothAlwaysUsageDescription": "Beyond Power Control uses Bluetooth to connect to and control your Beyond Power machine."
+      }
+    },
+    "publish": []
+  }
+}

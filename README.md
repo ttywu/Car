@@ -28,4 +28,5 @@ See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode
 
 A PC app for controlling a Beyond Power resistance machine over Bluetooth
 lives in [beyond-power/](beyond-power/README.md). A native Mac version you build
-with Xcode is in [mac/](mac/README.md).
+with Xcode is in [mac/](mac/README.md). Installable Windows, Linux and Mac apps are
+in [desktop/](desktop/README.md).
