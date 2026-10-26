@@ -23,3 +23,9 @@ workflow completes, the game is available at <https://ttywu.github.io/Car/>.
 ## iOS app
 
 See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode.
+
+## iPhone demo video
+
+[media/car-dash-iphone-demo.mp4](media/car-dash-iphone-demo.mp4) is a one-minute
+recording of Car Dash in an emulated iPhone 17 Pro screen. Regenerate it with
+`node tools/record-iphone-demo.js` (requires Playwright and ffmpeg).

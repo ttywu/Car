@@ -108,7 +108,7 @@ function movePlayer(direction) {
 }
 
 function updateHud() {
-  scoreEl.textContent = String(state.score);
+  scoreEl.textContent = String(Math.floor(state.score));
   bestEl.textContent = String(state.best);
   const fuel = Math.ceil(state.fuel);
   fuelEl.textContent = `${fuel}%`;
