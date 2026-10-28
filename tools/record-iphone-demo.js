@@ -1,5 +1,6 @@
 // Records a short Car Dash gameplay video in an emulated iPhone viewport.
 // Usage: node tools/record-iphone-demo.js  (requires Playwright and ffmpeg)
+// Also exports recordRun() for tools/record-iphone-duo.js.
 const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
@@ -10,7 +11,6 @@ const outDir = path.join(root, 'media');
 const outFile = path.join(outDir, 'car-dash-iphone-demo.mp4');
 const { defaultBrowserType, ...iphone } = devices['iPhone 17 Pro'];
 const scale = 2;
-const videoSize = { width: iphone.viewport.width * scale, height: iphone.viewport.height * scale };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -38,12 +38,13 @@ async function steerTo(page, lane) {
   await page.tap(`[data-direction="${lane > current ? 1 : -1}"]`, { timeout: 1000 }).catch(() => {});
 }
 
-(async () => {
-  const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'cardash-video-'));
-  const browser = await chromium.launch();
+// Plays about a minute of Car Dash and returns the path of the raw .webm recording.
+async function recordRun(browser, { viewport = iphone.viewport, dir }) {
   const context = await browser.newContext({
     ...iphone,
-    recordVideo: { dir: tmpDir, size: videoSize },
+    viewport,
+    // Playwright never scales recordings up, so record at CSS size and upscale with ffmpeg.
+    recordVideo: { dir, size: viewport },
   });
   const page = await context.newPage();
   await page.goto(`file://${path.join(root, 'index.html')}`);
@@ -102,15 +103,27 @@ async function steerTo(page, lane) {
 
   const video = page.video();
   await context.close();
+  return video.path();
+}
+
+async function main() {
+  const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'cardash-video-'));
+  const browser = await chromium.launch();
+  const webm = await recordRun(browser, { dir: tmpDir });
   await browser.close();
-  const webm = await video.path();
 
   fs.mkdirSync(outDir, { recursive: true });
   execFileSync('ffmpeg', [
-    '-y', '-loglevel', 'error', '-i', webm,
+    '-y', '-loglevel', 'error', '-i', webm, '-vf', `scale=iw*${scale}:ih*${scale}:flags=lanczos`,
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '23', '-movflags', '+faststart',
     outFile,
   ]);
   fs.rmSync(tmpDir, { recursive: true, force: true });
   console.log(`Saved ${path.relative(root, outFile)}`);
-})();
+}
+
+module.exports = { recordRun, iphone, scale };
+
+if (require.main === module) {
+  main();
+}

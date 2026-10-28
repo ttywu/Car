@@ -29,3 +29,7 @@ See [ios/README.md](ios/README.md) for opening and building the iOS app in Xcode
 [media/car-dash-iphone-demo.mp4](media/car-dash-iphone-demo.mp4) is a one-minute
 recording of Car Dash in an emulated iPhone 17 Pro screen. Regenerate it with
 `node tools/record-iphone-demo.js` (requires Playwright and ffmpeg).
+
+[media/car-dash-iphone-duo.mp4](media/car-dash-iphone-duo.mp4) shows two runs
+side by side in iPhone frames. Regenerate it with
+`node tools/record-iphone-duo.js`.
